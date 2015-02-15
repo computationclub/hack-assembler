@@ -1,3 +1,7 @@
 #!/usr/bin/env ruby
 
+require_relative '../lib/parser'
+require_relative '../lib/code'
+require_relative '../lib/symbol_table'
+
 input = ARGF.read
