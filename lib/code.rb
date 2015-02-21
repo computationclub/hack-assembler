@@ -37,4 +37,8 @@ module Code
 
     [m, zx, nx, zy, ny, f, no].map { |bit| bit ? '1' : '0' }.join
   end
+
+  def jump(mnemonic)
+    %w[_ GT EQ GE LT NE LE MP].index(mnemonic.slice(1..-1) || '_').to_s(2).rjust(3, '0')
+  end
 end
