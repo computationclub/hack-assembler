@@ -49,6 +49,10 @@ class Parser
     C_INSTRUCTION_PATTERN.match(current_command)[:comp]
   end
 
+  def jump
+    C_INSTRUCTION_PATTERN.match(current_command)[:jump].to_s
+  end
+
   private
 
   attr_accessor :current_command, :more_commands
