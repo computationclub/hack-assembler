@@ -27,6 +27,14 @@ class Parser
     end
   end
 
+  def symbol
+    if current_command.start_with?('@')
+      current_command.slice(1..-1)
+    elsif current_command.start_with?('(')
+      current_command.slice(1..-2)
+    end
+  end
+
   private
 
   attr_accessor :current_command, :more_commands
