@@ -12,7 +12,7 @@ class Parser
     !scanner.eos?
   end
 
-  attr_accessor :command_type, :symbol, :dest
+  attr_accessor :command_type, :symbol, :dest, :comp
 
   def advance
     scanner.skip Patterns::WHITESPACE_AND_COMMENTS
@@ -25,6 +25,7 @@ class Parser
       match = Patterns::C_COMMAND.match(scanner.matched)
       self.command_type = C_COMMAND
       self.dest = match[:dest]
+      self.comp = match[:comp]
     elsif scanner.scan(Patterns::L_COMMAND)
       match = Patterns::L_COMMAND.match(scanner.matched)
       self.command_type = L_COMMAND
