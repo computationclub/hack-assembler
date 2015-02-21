@@ -11,6 +11,10 @@ class Parser
     more_commands.any?
   end
 
+  def advance
+    _, *self.more_commands = more_commands
+  end
+
   private
 
   attr_accessor :more_commands
