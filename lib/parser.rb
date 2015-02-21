@@ -1,4 +1,6 @@
 class Parser
+  A_COMMAND, C_COMMAND, L_COMMAND = 3.times.map { Object.new }
+
   def initialize(input)
     self.more_commands =
       input.lines.
@@ -12,10 +14,20 @@ class Parser
   end
 
   def advance
-    _, *self.more_commands = more_commands
+    self.current_command, *self.more_commands = more_commands
+  end
+
+  def command_type
+    if current_command.start_with?('@')
+      A_COMMAND
+    elsif current_command.start_with?('(')
+      L_COMMAND
+    else
+      C_COMMAND
+    end
   end
 
   private
 
-  attr_accessor :more_commands
+  attr_accessor :current_command, :more_commands
 end
