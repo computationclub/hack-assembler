@@ -1,5 +1,11 @@
 class Parser
   A_COMMAND, C_COMMAND, L_COMMAND = 3.times.map { Object.new }
+  C_INSTRUCTION_PATTERN =
+    %r{
+      (?:  (?<dest> [^=;]+)= )?  # dest field, optional, “=”-suffixed
+      (?:  (?<comp> [^=;]+)  )   # comp field, required
+      (?: ;(?<jump> [^=;]+)  )?  # jump field, optional, “;”-prefixed
+    }x
 
   def initialize(input)
     self.more_commands =
@@ -33,6 +39,10 @@ class Parser
     elsif current_command.start_with?('(')
       current_command.slice(1..-2)
     end
+  end
+
+  def dest
+    C_INSTRUCTION_PATTERN.match(current_command)[:dest].to_s
   end
 
   private
