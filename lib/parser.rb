@@ -1,6 +1,8 @@
 require 'strscan'
 
 class Parser
+  A_COMMAND, C_COMMAND, L_COMMAND = 3.times.map { Object.new }
+
   def initialize(input)
     self.scanner = StringScanner.new(input)
   end
@@ -10,9 +12,18 @@ class Parser
     !scanner.eos?
   end
 
+  attr_accessor :command_type
+
   def advance
     scanner.skip Patterns::WHITESPACE_AND_COMMENTS
-    scanner.skip(Patterns::A_COMMAND) || scanner.skip(Patterns::C_COMMAND) || scanner.skip(Patterns::L_COMMAND)
+
+    if scanner.scan(Patterns::A_COMMAND)
+      self.command_type = A_COMMAND
+    elsif scanner.scan(Patterns::C_COMMAND)
+      self.command_type = C_COMMAND
+    elsif scanner.scan(Patterns::L_COMMAND)
+      self.command_type = L_COMMAND
+    end
   end
 
   private
