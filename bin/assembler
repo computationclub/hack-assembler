@@ -4,4 +4,25 @@ require_relative '../lib/parser'
 require_relative '../lib/code'
 require_relative '../lib/symbol_table'
 
-input = ARGF.read
+Program = Struct.new(:source) do
+  def each_instruction(&block)
+    each_command do |command|
+      command.each_instruction &block
+    end
+  end
+
+  private
+
+  def each_command
+    parser = Parser.new(source)
+
+    while parser.has_more_commands?
+      parser.advance
+      # TODO yield a command
+    end
+  end
+end
+
+Program.new(ARGF.read).each_instruction do |instruction|
+  puts instruction.assemble
+end
