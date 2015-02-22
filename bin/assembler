@@ -7,9 +7,10 @@ require_relative '../lib/symbol_table'
 Program = Struct.new(:source) do
   def each_instruction(&block)
     symbol_table = Symbols.build_table(commands)
+    variable_addresses = Symbols.variable_addresses
 
     each_command do |command|
-      command.each_instruction symbol_table, &block
+      command.each_instruction symbol_table, variable_addresses, &block
     end
   end
 
@@ -63,6 +64,10 @@ module Symbols
     end
   end
 
+  def variable_addresses
+    REGISTER_COUNT.upto(Float::INFINITY)
+  end
+
   def each_entry(commands, &block)
     each_predefined_symbol &block
     each_label commands, &block
@@ -93,8 +98,8 @@ module Command
   RADIX = 10
 
   Addressing = Struct.new(:symbol) do
-    def each_instruction(symbol_table)
-      yield Instruction::Addressing.new(value(symbol_table))
+    def each_instruction(symbol_table, variable_addresses)
+      yield Instruction::Addressing.new(value(symbol_table, variable_addresses))
     end
 
     def each_label(instruction_addresses)
@@ -103,12 +108,11 @@ module Command
 
     private
 
-    def value(symbol_table)
+    def value(symbol_table, variable_addresses)
       if numeric?
         symbol.to_i(RADIX)
       else
-        # TODO handle variables
-        raise "unknown symbol “#{symbol}”" unless symbol_table.contains?(symbol)
+        symbol_table.add_entry(symbol, variable_addresses.next) unless symbol_table.contains?(symbol)
         symbol_table.get_address(symbol)
       end
     end
@@ -119,7 +123,7 @@ module Command
   end
 
   Compute = Struct.new(:dest, :comp, :jump) do
-    def each_instruction(symbol_table)
+    def each_instruction(symbol_table, variable_addresses)
       yield Instruction::Compute.new(dest, comp, jump)
     end
 
@@ -129,7 +133,7 @@ module Command
   end
 
   Label = Struct.new(:symbol) do
-    def each_instruction(symbol_table)
+    def each_instruction(symbol_table, variable_addresses)
       # do nothing
     end
 
