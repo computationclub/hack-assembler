@@ -37,15 +37,41 @@ Program = Struct.new(:source) do
 end
 
 module Symbols
+  PREDEFINED_SYMBOLS = {
+    'SP'      => 0x0000,
+    'LCL'     => 0x0001,
+    'ARG'     => 0x0002,
+    'THIS'    => 0x0003,
+    'THAT'    => 0x0004,
+    'SCREEN'  => 0x4000,
+    'KBD'     => 0x6000
+  }
+  REGISTER_PREFIX = 'R'
+  REGISTER_COUNT = 16
+
   module_function
 
   def build_table
     SymbolTable.new.tap do |symbol_table|
-      # TODO add predefined symbols
+      each_predefined_symbol do |entry|
+        symbol_table.add_entry entry.symbol, entry.address
+      end
       # TODO add labels
     end
   end
+
+  def each_predefined_symbol
+    PREDEFINED_SYMBOLS.each do |symbol, address|
+      yield Entry.new(symbol, address)
+    end
+
+    REGISTER_COUNT.times do |n|
+      yield Entry.new([REGISTER_PREFIX, n].join, n)
+    end
+  end
 end
+
+Entry = Struct.new(:symbol, :address)
 
 module Command
   RADIX = 10
