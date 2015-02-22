@@ -72,15 +72,19 @@ module Command
 end
 
 module Instruction
+  BIT_COUNT = 16
+  ADDRESSING_BIT = '0'
+  COMPUTE_BIT = '1'
+
   Addressing = Struct.new(:value) do
     def assemble
-      # TODO return the binary representation of an addressing instruction
+      value.to_s(2).rjust(BIT_COUNT, ADDRESSING_BIT)
     end
   end
 
   Compute = Struct.new(:dest, :comp, :jump) do
     def assemble
-      # TODO return the binary representation of a compute instruction
+      [Code.comp(comp), Code.dest(dest), Code.jump(jump)].join.rjust(BIT_COUNT, COMPUTE_BIT)
     end
   end
 end
