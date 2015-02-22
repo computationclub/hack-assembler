@@ -18,7 +18,38 @@ Program = Struct.new(:source) do
 
     while parser.has_more_commands?
       parser.advance
-      # TODO yield a command
+      yield current_command(parser)
+    end
+  end
+
+  def current_command(parser)
+    case parser.command_type
+    when Parser::A_COMMAND
+      Command::Addressing.new(parser.symbol)
+    when Parser::C_COMMAND
+      Command::Compute.new(parser.dest, parser.comp, parser.jump)
+    when Parser::L_COMMAND
+      Command::Label.new(parser.symbol)
+    end
+  end
+end
+
+module Command
+  Addressing = Struct.new(:symbol) do
+    def each_instruction
+      # TODO yield an addressing instruction
+    end
+  end
+
+  Compute = Struct.new(:dest, :comp, :jump) do
+    def each_instruction
+      # TODO yield a compute instruction
+    end
+  end
+
+  Label = Struct.new(:symbol) do
+    def each_instruction
+      # do nothing
     end
   end
 end
