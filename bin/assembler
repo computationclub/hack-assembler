@@ -6,8 +6,10 @@ require_relative '../lib/symbol_table'
 
 Program = Struct.new(:source) do
   def each_instruction(&block)
+    symbol_table = Symbols.build_table
+
     each_command do |command|
-      command.each_instruction &block
+      command.each_instruction symbol_table, &block
     end
   end
 
@@ -34,22 +36,34 @@ Program = Struct.new(:source) do
   end
 end
 
+module Symbols
+  module_function
+
+  def build_table
+    SymbolTable.new.tap do |symbol_table|
+      # TODO add predefined symbols
+      # TODO add labels
+    end
+  end
+end
+
 module Command
   RADIX = 10
 
   Addressing = Struct.new(:symbol) do
-    def each_instruction
-      yield Instruction::Addressing.new(value)
+    def each_instruction(symbol_table)
+      yield Instruction::Addressing.new(value(symbol_table))
     end
 
     private
 
-    def value
+    def value(symbol_table)
       if numeric?
         symbol.to_i(RADIX)
       else
-        # TODO handle symbols
-        raise 'can’t handle symbols yet'
+        # TODO handle variables
+        raise "unknown symbol “#{symbol}”" unless symbol_table.contains?(symbol)
+        symbol_table.get_address(symbol)
       end
     end
 
@@ -59,13 +73,13 @@ module Command
   end
 
   Compute = Struct.new(:dest, :comp, :jump) do
-    def each_instruction
+    def each_instruction(symbol_table)
       yield Instruction::Compute.new(dest, comp, jump)
     end
   end
 
   Label = Struct.new(:symbol) do
-    def each_instruction
+    def each_instruction(symbol_table)
       # do nothing
     end
   end
