@@ -35,21 +35,52 @@ Program = Struct.new(:source) do
 end
 
 module Command
+  RADIX = 10
+
   Addressing = Struct.new(:symbol) do
     def each_instruction
-      # TODO yield an addressing instruction
+      yield Instruction::Addressing.new(value)
+    end
+
+    private
+
+    def value
+      if numeric?
+        symbol.to_i(RADIX)
+      else
+        # TODO handle symbols
+        raise 'can’t handle symbols yet'
+      end
+    end
+
+    def numeric?
+      Integer(symbol, RADIX) rescue false
     end
   end
 
   Compute = Struct.new(:dest, :comp, :jump) do
     def each_instruction
-      # TODO yield a compute instruction
+      yield Instruction::Compute.new(dest, comp, jump)
     end
   end
 
   Label = Struct.new(:symbol) do
     def each_instruction
       # do nothing
+    end
+  end
+end
+
+module Instruction
+  Addressing = Struct.new(:value) do
+    def assemble
+      # TODO return the binary representation of an addressing instruction
+    end
+  end
+
+  Compute = Struct.new(:dest, :comp, :jump) do
+    def assemble
+      # TODO return the binary representation of a compute instruction
     end
   end
 end
