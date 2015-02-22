@@ -6,7 +6,7 @@ require_relative '../lib/symbol_table'
 
 Program = Struct.new(:source) do
   def each_instruction(&block)
-    symbol_table = Symbols.build_table
+    symbol_table = Symbols.build_table(commands)
 
     each_command do |command|
       command.each_instruction symbol_table, &block
@@ -14,6 +14,10 @@ Program = Struct.new(:source) do
   end
 
   private
+
+  def commands
+    enum_for :each_command
+  end
 
   def each_command
     parser = Parser.new(source)
@@ -51,13 +55,17 @@ module Symbols
 
   module_function
 
-  def build_table
+  def build_table(commands)
     SymbolTable.new.tap do |symbol_table|
-      each_predefined_symbol do |entry|
+      each_entry(commands) do |entry|
         symbol_table.add_entry entry.symbol, entry.address
       end
-      # TODO add labels
     end
+  end
+
+  def each_entry(commands, &block)
+    each_predefined_symbol &block
+    each_label commands, &block
   end
 
   def each_predefined_symbol
@@ -67,6 +75,14 @@ module Symbols
 
     REGISTER_COUNT.times do |n|
       yield Entry.new([REGISTER_PREFIX, n].join, n)
+    end
+  end
+
+  def each_label(commands, &block)
+    instruction_addresses = 0.upto(Float::INFINITY)
+
+    commands.each do |command|
+      command.each_label instruction_addresses, &block
     end
   end
 end
@@ -79,6 +95,10 @@ module Command
   Addressing = Struct.new(:symbol) do
     def each_instruction(symbol_table)
       yield Instruction::Addressing.new(value(symbol_table))
+    end
+
+    def each_label(instruction_addresses)
+      instruction_addresses.next
     end
 
     private
@@ -102,11 +122,19 @@ module Command
     def each_instruction(symbol_table)
       yield Instruction::Compute.new(dest, comp, jump)
     end
+
+    def each_label(instruction_addresses)
+      instruction_addresses.next
+    end
   end
 
   Label = Struct.new(:symbol) do
     def each_instruction(symbol_table)
       # do nothing
+    end
+
+    def each_label(instruction_addresses)
+      yield Entry.new(symbol, instruction_addresses.peek)
     end
   end
 end
