@@ -155,6 +155,14 @@ RSpec.describe Parser do
           expect(parser.symbol).to eq '42'
         end
       end
+
+      context 'containing a decimal number followed by a comment' do
+        let(:input) { '@42 // a comment' }
+
+        it 'returns the decimal number' do
+          expect(parser.symbol).to eq '42'
+        end
+      end
     end
 
     context 'when the current command is a label' do

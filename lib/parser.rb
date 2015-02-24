@@ -6,8 +6,8 @@ class Parser
   def initialize(input)
     @input = input.lines
 
-    strip_whitespace
     strip_comments
+    strip_whitespace
   end
 
   def has_more_commands?
@@ -74,6 +74,6 @@ class Parser
 
   def strip_comments
     @input =
-      @input.reject { |line| line =~ /^\/\// }
+      @input.reject { |line| line =~ /^\/\// }.map { |line| line.gsub(/\/\/.*$/,'') }
   end
 end
