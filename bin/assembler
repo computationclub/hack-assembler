@@ -5,3 +5,14 @@ require_relative '../lib/code'
 require_relative '../lib/symbol_table'
 
 input = ARGF.read
+parser = Parser.new(input)
+
+while parser.has_more_commands?
+  parser.advance
+
+  if parser.command_type == Parser::C_COMMAND
+    puts ["111", Code.comp(parser.comp), Code.dest(parser.dest), Code.jump(parser.jump)].join
+  elsif parser.command_type == Parser::A_COMMAND
+    puts parser.symbol.to_i.to_s(2).rjust(16, '0')
+  end
+end
