@@ -4,4 +4,21 @@ require_relative '../lib/parser'
 require_relative '../lib/code'
 require_relative '../lib/symbol_table'
 
-input = ARGF.read
+parser = Parser.new(ARGF.read)
+
+while parser.has_more_commands?
+  parser.advance
+  case parser.command_type
+  when Parser::A_COMMAND
+    puts '0%015b' % parser.symbol
+  when Parser::C_COMMAND
+    puts [
+      '111',
+      Code.comp(parser.comp),
+      Code.dest(parser.dest),
+      Code.jump(parser.jump)
+    ].join
+  when Parser::L_COMMAND
+    fail "Labels are not implemented yet"
+  end
+end
