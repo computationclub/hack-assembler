@@ -1,11 +1,16 @@
 class Parser
-  attr_reader :input
+  attr_reader :lines
 
   def initialize(input)
-    @input = input
+    input = input.gsub(%r{//.*$}, '').strip
+    @lines = input.lines
   end
 
   def has_more_commands?
-    !input.gsub(%r{//.*$}, '').strip.empty?
+    !@lines.empty?
+  end
+
+  def advance
+    @lines.shift
   end
 end
