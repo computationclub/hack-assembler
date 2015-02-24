@@ -1,80 +1,127 @@
 require 'strscan'
 
+class Scanner
+  TOKENS = {
+    whitespace_and_comments: %r{ (?: [[:space:]] | // .* $)+ }x,
+    number: %r{ [[:digit:]]+ }x,
+    identifier: %r{ [[[:alpha:]]_.$:] [[[:alnum:]]_.$:]* }x,
+    operation: %r{ [!+\-&|] }x,
+    at: %r{ @ }x,
+    left_bracket: %r{ \( }x,
+    right_bracket: %r{ \) }x,
+    equals: %r{ = }x,
+    semicolon: %r{ ; }x
+  }
+
+  def initialize(input)
+    self.input = StringScanner.new(input)
+  end
+
+  def each_token
+    until input.eos?
+      TOKENS.each do |type, pattern|
+        if string = input.scan(pattern)
+          yield type, string
+          break
+        end
+      end
+    end
+  end
+
+  def tokens
+    to_enum :each_token
+  end
+
+  private
+
+  attr_accessor :input
+end
+
 class Parser
   A_COMMAND, C_COMMAND, L_COMMAND = 3.times.map { Object.new }
 
   def initialize(input)
-    self.scanner = StringScanner.new(input)
+    self.tokens = Scanner.new(input).tokens
   end
 
   def has_more_commands?
-    scanner.skip Patterns::WHITESPACE_AND_COMMENTS
-    !scanner.eos?
+    begin
+      loop do
+        type, string = tokens.peek
+        return true unless type == :whitespace_and_comments
+        tokens.next
+      end
+    rescue StopIteration
+      false
+    end
   end
 
   attr_accessor :command_type, :symbol, :dest, :comp, :jump
 
-  def advance
-    scanner.skip Patterns::WHITESPACE_AND_COMMENTS
+  def read_field
+    field = ''
 
-    if scanner.scan(Patterns::A_COMMAND)
-      match = Patterns::A_COMMAND.match(scanner.matched)
+    type, string = tokens.next
+    begin
+      while [:identifier, :number, :operation].include?(type)
+        field << string
+        type, string = tokens.next
+      end
+    rescue StopIteration
+      type = :whitespace_and_comments
+    end
+
+    [field, type]
+  end
+
+  def advance
+    begin
+      loop do
+        type, string = tokens.peek
+        break unless type == :whitespace_and_comments
+        tokens.next
+      end
+    rescue StopIteration
+    end
+
+    type, string = tokens.peek
+
+    case type
+    when :at
       self.command_type = A_COMMAND
-      self.symbol = match[:value]
-    elsif scanner.scan(Patterns::C_COMMAND)
-      match = Patterns::C_COMMAND.match(scanner.matched)
+      tokens.next
+      _, self.symbol = tokens.next
+    when :identifier, :number, :operation
       self.command_type = C_COMMAND
-      self.dest = match[:dest]
-      self.comp = match[:comp]
-      self.jump = match[:jump]
-    elsif scanner.scan(Patterns::L_COMMAND)
-      match = Patterns::L_COMMAND.match(scanner.matched)
+      fields = []
+      separators = []
+
+      loop do
+        field, separator = read_field
+
+        fields << field
+        break if separator == :whitespace_and_comments
+        separators << separator
+      end
+
+      self.dest, self.comp, self.jump =
+        case separators
+        when [:equals]
+          [*fields, '']
+        when [:semicolon]
+          ['', *fields]
+        when [:equals, :semicolon]
+          fields
+        end
+    when :left_bracket
       self.command_type = L_COMMAND
-      self.symbol = match[:symbol]
+      tokens.next
+      _, self.symbol = tokens.next
+      tokens.next
     end
   end
 
   private
 
-  attr_accessor :scanner
-
-  module Patterns
-    WHITESPACE_AND_COMMENTS =
-      %r{
-        (?: [[:space:]] | // .* $ )+
-      }x
-
-    CONSTANT =
-      %r{
-        [[:digit:]]+
-      }x
-
-    SYMBOL =
-      %r{
-        [ [[:alpha:]] _ . $ : ]
-        [ [[:alnum:]] _ . $ : ]*
-      }x
-
-    VALUE = Regexp.union(CONSTANT, SYMBOL)
-
-    A_COMMAND =
-      %r{
-        @
-        (?<value> #{VALUE} )
-      }x
-
-    C_COMMAND =
-      %r{
-        (?:  (?<dest> [^ [[:space:]] ( ) = ; ]+)= | (?<dest>) )  # dest field, optional, “=”-suffixed
-        (?:  (?<comp> [^ [[:space:]] ( ) = ; ]+)              )  # comp field, required
-        (?: ;(?<jump> [^ [[:space:]] ( ) = ; ]+)  | (?<jump>) )  # jump field, optional, “;”-prefixed
-      }x
-
-    L_COMMAND =
-      %r{
-        \(
-        (?<symbol> #{SYMBOL} )
-        \)
-      }x
-  end
+  attr_accessor :tokens
 end
