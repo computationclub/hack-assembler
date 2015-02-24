@@ -42,6 +42,12 @@ class Parser
     end
   end
 
+  def comp
+    current
+      .split('=').last
+      .split(';').first
+  end
+
   private
 
   attr_reader :lines, :current

@@ -242,7 +242,8 @@ RSpec.describe Parser do
       'D=D-M'   => 'D-M',
       'M=M-D'   => 'M-D',
       'M=D&M'   => 'D&M',
-      'M=D|M'   => 'D|M'
+      'M=D|M'   => 'D|M',
+      'D=0;JMP' => '0'
     }.each do |command, mnemonic|
       context "when the comp mnemonic is #{mnemonic}" do
         let(:input) { command }
