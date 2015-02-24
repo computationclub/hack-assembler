@@ -1,7 +1,7 @@
 class Parser
-  class A_COMMAND; end
-  class C_COMMAND; end
-  class L_COMMAND; end
+  A_COMMAND = Object.new
+  C_COMMAND = Object.new
+  L_COMMAND = Object.new
 
   def initialize(input)
     @lines = split_lines(input)
@@ -22,6 +22,15 @@ class Parser
       L_COMMAND
     else
       C_COMMAND
+    end
+  end
+
+  def symbol
+    case command_type
+    when A_COMMAND
+      current[1..-1]
+    else
+      current[1..-2]
     end
   end
 
