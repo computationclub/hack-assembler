@@ -102,6 +102,24 @@ RSpec.describe Parser do
         expect(parser.has_more_commands?).to be_falsy
       end
     end
+
+    context 'with interleaved comments' do
+      let(:input) do
+        <<-eop
+          @R0
+          // An interleaved comment
+          D=M
+        eop
+      end
+
+      it 'leaves no more commands' do
+        expect(parser.has_more_commands?).to be_truthy
+        parser.advance
+        expect(parser.has_more_commands?).to be_truthy
+        parser.advance
+        expect(parser.has_more_commands?).to be_falsy
+      end
+    end
   end
 
   describe '#command_type' do
