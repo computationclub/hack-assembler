@@ -1,0 +1,93 @@
+grammar Hack
+  rule program
+    (whitespace / comment / command)* {
+      def commands
+        elements.flat_map(&:commands)
+      end
+    }
+  end
+
+  rule whitespace
+    [\s]+ {
+      def commands
+        []
+      end
+    }
+  end
+
+  rule comment
+    '//' [^\n]* ("\n" / !.) {
+      def commands
+        []
+      end
+    }
+  end
+
+  rule command
+    a_command / c_command / l_command
+  end
+
+  rule a_command
+    '@' value:[^\s]+ {
+      def commands
+        [{ type: :a, value: value.text_value }]
+      end
+    }
+  end
+
+  rule c_command
+    dest comp jump {
+      def commands
+        [{ type: :c, dest: dest.field_value, comp: comp.field_value, jump: jump.field_value }]
+      end
+    }
+  end
+
+  rule dest
+    field '=' {
+      def field_value
+        field.text_value
+      end
+    }
+    /
+    '' {
+      def field_value
+        ''
+      end
+    }
+  end
+
+  rule comp
+    field:field {
+      def field_value
+        field.text_value
+      end
+    }
+  end
+
+  rule jump
+    ';' field {
+      def field_value
+        field.text_value
+      end
+    }
+    /
+    '' {
+      def field_value
+        ''
+      end
+    }
+  end
+
+  rule field
+    [^\s@=;()]+
+  end
+
+  rule l_command
+    '(' symbol:[^)]+ ')' {
+      def commands
+        [{ type: :l, symbol: symbol.text_value }]
+      end
+    }
+  end
+end

@@ -1,80 +1,38 @@
-require 'strscan'
+require 'treetop'
+Treetop.load(File.expand_path('../hack', __FILE__))
 
 class Parser
   A_COMMAND, C_COMMAND, L_COMMAND = 3.times.map { Object.new }
 
   def initialize(input)
-    self.scanner = StringScanner.new(input)
+    self.commands = HackParser.new.parse(input).commands
   end
 
   def has_more_commands?
-    scanner.skip Patterns::WHITESPACE_AND_COMMENTS
-    !scanner.eos?
+    commands.any?
   end
 
   attr_accessor :command_type, :symbol, :dest, :comp, :jump
 
   def advance
-    scanner.skip Patterns::WHITESPACE_AND_COMMENTS
+    command = commands.shift
 
-    if scanner.scan(Patterns::A_COMMAND)
-      match = Patterns::A_COMMAND.match(scanner.matched)
+    case command[:type]
+    when :a
       self.command_type = A_COMMAND
-      self.symbol = match[:value]
-    elsif scanner.scan(Patterns::C_COMMAND)
-      match = Patterns::C_COMMAND.match(scanner.matched)
+      self.symbol = command[:value]
+    when :c
       self.command_type = C_COMMAND
-      self.dest = match[:dest]
-      self.comp = match[:comp]
-      self.jump = match[:jump]
-    elsif scanner.scan(Patterns::L_COMMAND)
-      match = Patterns::L_COMMAND.match(scanner.matched)
+      self.dest = command[:dest]
+      self.comp = command[:comp]
+      self.jump = command[:jump]
+    when :l
       self.command_type = L_COMMAND
-      self.symbol = match[:symbol]
+      self.symbol = command[:symbol]
     end
   end
 
   private
 
-  attr_accessor :scanner
-
-  module Patterns
-    WHITESPACE_AND_COMMENTS =
-      %r{
-        (?: [[:space:]] | // .* $ )+
-      }x
-
-    CONSTANT =
-      %r{
-        [[:digit:]]+
-      }x
-
-    SYMBOL =
-      %r{
-        [ [[:alpha:]] _ . $ : ]
-        [ [[:alnum:]] _ . $ : ]*
-      }x
-
-    VALUE = Regexp.union(CONSTANT, SYMBOL)
-
-    A_COMMAND =
-      %r{
-        @
-        (?<value> #{VALUE} )
-      }x
-
-    C_COMMAND =
-      %r{
-        (?:  (?<dest> [^ [[:space:]] ( ) = ; ]+)= | (?<dest>) )  # dest field, optional, “=”-suffixed
-        (?:  (?<comp> [^ [[:space:]] ( ) = ; ]+)              )  # comp field, required
-        (?: ;(?<jump> [^ [[:space:]] ( ) = ; ]+)  | (?<jump>) )  # jump field, optional, “;”-prefixed
-      }x
-
-    L_COMMAND =
-      %r{
-        \(
-        (?<symbol> #{SYMBOL} )
-        \)
-      }x
-  end
+  attr_accessor :commands
 end
