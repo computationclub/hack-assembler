@@ -48,6 +48,14 @@ class Parser
       .split(';').first
   end
 
+  def jump
+    if current.include?(';')
+      current.split(';').last
+    else
+      ''
+    end
+  end
+
   private
 
   attr_reader :lines, :current
