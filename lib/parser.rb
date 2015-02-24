@@ -34,6 +34,14 @@ class Parser
     end
   end
 
+  def dest
+    if current.include?('=')
+      current.split('=').first
+    else
+      ''
+    end
+  end
+
   private
 
   attr_reader :lines, :current
