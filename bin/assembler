@@ -67,9 +67,9 @@ def generate_code(input, table)
         when Parser::A_COMMAND then
             puts "0%015b" % get_address.(parser.symbol)
         when Parser::C_COMMAND then
-            comp, dest, jump = [:comp, :dest, :jump].map do |sym|
-                Code.send(sym, parser.send(sym))
-            end
+            comp = Code.comp(parser.comp)
+            dest = Code.dest(parser.dest)
+            jump = Code.jump(parser.jump)
 
             puts "111#{comp}#{dest}#{jump}"
         end
