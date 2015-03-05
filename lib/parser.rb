@@ -29,7 +29,20 @@ class Parser
         case command_type
         when Parser::A_COMMAND then @current.strip[1..-1]
         when Parser::L_COMMAND then @current.strip[1..-2]
-        else raise "Parser#symbol not defined for current command_type"
+        else wrong_command_type
         end
+    end
+
+    def dest
+        wrong_command_type unless command_type == Parser::C_COMMAND
+
+        dest, match, _ = @current.partition('=')
+        match.empty? ? "" : dest
+    end
+
+    private
+    def wrong_command_type
+        f = caller[0][/`.*'/][1..-2]
+        raise "#{self.class}##{f} not defined for current command_type"
     end
 end
