@@ -1,6 +1,6 @@
 class SymbolTable
-  def initialize
-    @table = {}
+  def initialize table = {}
+    @table = table
   end
 
   def add_entry symbol, value

@@ -4,17 +4,78 @@ require_relative '../lib/parser'
 require_relative '../lib/code'
 require_relative '../lib/symbol_table'
 
-parser = Parser.new(ARGF.read)
+HARDCODED_ADDRESSES = {
+    'SP' => 0,
+    'LCL' => 1,
+    'ARG' => 2,
+    'THIS' => 3,
+    'THAT' => 4,
+    'R0' => 0,
+    'R1' => 1,
+    'R2' => 2,
+    'R3' => 3,
+    'R4' => 4,
+    'R5' => 5,
+    'R6' => 6,
+    'R7' => 7,
+    'R8' => 8,
+    'R9' => 9,
+    'R10' => 10,
+    'R11' => 11,
+    'R12' => 12,
+    'R13' => 13,
+    'R14' => 14,
+    'R15' => 15,
+    'SCREEN' => 0x4000,
+    'KBD' => 0x6000
+}
 
-parser.each_command do |command_type|
-    case command_type
-    when Parser::A_COMMAND then puts "0%015b" % parser.symbol
-    when Parser::C_COMMAND then
-        comp, dest, jump = [:comp, :dest, :jump].map do |sym|
-            Code.send(sym, parser.send(sym))
+def parse_labels(input)
+    parser = Parser.new(input)
+    table = SymbolTable.new HARDCODED_ADDRESSES
+    icount = 0
+
+    parser.each_command do |command_type|
+        if command_type == Parser::L_COMMAND
+            table.add_entry parser.symbol, icount
+        else
+            icount += 1
         end
+    end
 
-        puts "111#{comp}#{dest}#{jump}"
-    else raise "Unimplemented"
+    table
+end
+
+def generate_code(input, table)
+    parser = Parser.new(input)
+    # Start placing variables from address 16 onwards
+    next_address = 16
+
+    get_address = ->(sym) do
+        if sym =~ /^\d+$/
+            sym
+        elsif table.contains? sym
+            table.get_address sym
+        else
+            table.add_entry sym, next_address
+            address, next_address = next_address, next_address + 1
+        end
+    end
+
+    parser.each_command do |command_type|
+        case command_type
+        when Parser::A_COMMAND then
+            puts "0%015b" % get_address.(parser.symbol)
+        when Parser::C_COMMAND then
+            comp, dest, jump = [:comp, :dest, :jump].map do |sym|
+                Code.send(sym, parser.send(sym))
+            end
+
+            puts "111#{comp}#{dest}#{jump}"
+        end
     end
 end
+
+input = ARGF.read
+table = parse_labels(input)
+generate_code(input, table)
