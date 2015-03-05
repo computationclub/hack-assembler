@@ -13,8 +13,10 @@ class Parser
 
     def advance
         begin
-            @current, _, @remaining = @remaining.partition("\n")
-        end while @current =~ /^((\s*\/+.*)|\s*$)/
+            line, _, @remaining = @remaining.partition("\n")
+            # Strip trailing comments
+            @current = line.partition('//').first.strip
+        end while @current.empty?
     end
 
     def command_type
