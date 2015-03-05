@@ -24,4 +24,12 @@ class Parser
         else Parser::C_COMMAND
         end
     end
+
+    def symbol
+        case command_type
+        when Parser::A_COMMAND then @current.strip[1..-1]
+        when Parser::L_COMMAND then @current.strip[1..-2]
+        else raise "Parser#symbol not defined for current command_type"
+        end
+    end
 end
