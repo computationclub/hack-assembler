@@ -25,6 +25,13 @@ class Parser
         end
     end
 
+    def each_command
+        while has_more_commands?
+            advance
+            yield command_type
+        end
+    end
+
     def symbol
         case command_type
         when Parser::A_COMMAND then @current.strip[1..-1]

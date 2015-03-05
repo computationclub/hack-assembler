@@ -4,4 +4,17 @@ require_relative '../lib/parser'
 require_relative '../lib/code'
 require_relative '../lib/symbol_table'
 
-input = ARGF.read
+parser = Parser.new(ARGF.read)
+
+parser.each_command do |command_type|
+    case command_type
+    when Parser::A_COMMAND then puts "0%015b" % parser.symbol
+    when Parser::C_COMMAND then
+        comp, dest, jump = [:comp, :dest, :jump].map do |sym|
+            Code.send(sym, parser.send(sym))
+        end
+
+        puts "111#{comp}#{dest}#{jump}"
+    else raise "Unimplemented"
+    end
+end
