@@ -40,6 +40,13 @@ class Parser
         match.empty? ? "" : dest
     end
 
+    def jump
+        wrong_command_type unless command_type == Parser::C_COMMAND
+
+        _, match, jump = @current.rpartition(';')
+        match.empty? ? "": jump
+    end
+
     private
     def wrong_command_type
         f = caller[0][/`.*'/][1..-2]
