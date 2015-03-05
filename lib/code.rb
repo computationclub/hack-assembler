@@ -39,7 +39,7 @@ module Code
         when 'A-D' then '000111'
         when 'D&A' then '000000'
         when 'D|A' then '010101'
-        else raise "Unknown mnemonic"
+        else raise "Unknown mnemonic: '#{mnemonic}'"
         end
 
         address + comp
