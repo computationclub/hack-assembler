@@ -32,6 +32,9 @@ PREDEFINED_SYMBOLS = {
   'KBD'    => 0x6000
 }
 
+# Any more than this and then we overflow 15bits of address space
+MAX_PROGRAM_SIZE = (2**15) -1
+
 def add_predefined_symbols(symbols)
   PREDEFINED_SYMBOLS.each do |k, v|
     symbols.add_entry(k, v)
@@ -52,6 +55,8 @@ def parse_labels(input, symbols)
       address += 1
     end
   end
+
+  raise "Program is too large: #{address} > #{MAX_PROGRAM_SIZE}" if address >= MAX_PROGRAM_SIZE
 end
 
 def generate_code(input, symbols)
